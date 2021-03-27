@@ -1,66 +1,87 @@
 <section class="container mx-auto" id="patientDashboardContainer">
-  <div class="row" style="margin: 30px;">
-    <h1>Welcome to your dashboard</h1>
-  </div>
-  <br />
-  <div class="row">
-    <div class="card">
-      <div class="card-header">
-        <h2>Your Information</h2>
-      </div>
-      <div class="card-body">
-        <p>Name: </p>
-        <p>Date of Birth: </p>
-        <p>Email: </p>
-        <p>Registration Date: </p>
-      </div>
-      <div class="card-footer"></div>
-    </div>
-  </div>
-  <br />
-  <div class="row">
-    <div class="card">
-      <div class="card-header">
-        <h2>Your Previous Visits</h2>
-      </div>
-      <div class="card-body">
-        {{{#each visits as |visit|}}}
-        <p>Date: {{{visit.date}}} with Dr. {{{visit.doctor}}}</p>
-        {{{/each}}}
-      </div>
-      <div class="card-footer">
-        <button type="button" class="btn btn-primary">Start a new virtual visit</button>
-      </div>
-    </div>
-  </div>
-  <br />
-  <div class="row">
-    <div class="card">
-      <div class="card-header">
-        <h2>Tests prescribed</h2>
-      </div>
-      <div class="card-body">
-        {{{#each test_prescribed as |test_prescribed|}}}
-        <p>Name: {{{test_prescribed.name}}} : The result was {{{test_prescribed.result}}}</p>
-        {{{/each}}}
-      </div>
-      <div class="card-footer"></div>
-    </div>
-  </div>
-  </div>
-  <br />
-  <div class="row">
-    <div class="card">
-      <div class="card-header">
-        <h2>Treatments Prescribed</h2>
-      </div>
-      <div class="card-body">
-        {{{#each treatments_prescribed as |treatment_prescribed|}}}
-        <p>Name: {{{treatment_prescribed.name}}}</p>
-        {{{/each}}}
-      </div>
-      <div class="card-footer"></div>
-    </div>
-  </div>
+  <div class="row justify-content-center" style="margin: 30px;">
+    <h1>Welcome to your dashboard, {{{title}}} {{{last_name}}}.</h1>
   </div>
 </section>
+<section class="container mx-auto" id="patientInfoContainer">
+  <div class="row justify-content-center" style="margin: 30px;">
+    <div class="card">
+      <div class="card-title">
+        <h2>Your Information</h2>
+      </div>
+      <div class="card-body" id="patientInfoBody">
+        <div class="row mx-auto">
+          <div class="col-sm-12 col-md-4 my-auto">
+            <img id="patientDashboardImg" style="height: 200px; width: 175px; box-shadow: 2px 2px 2px 2px grey"
+              src="{{{image}}}" alt="patient picture (coming soon)">
+          </div>
+          <div class="col-sm-12 col-md-8">
+            <div id="patientDashboardInfo">
+              <p>Title: {{{title}}}</p>
+              <p>Name: {{{first_name}}} {{{last_name}}}</p>
+              <p>Date of Birth: {{{format_date dob}}} </p>
+              <p>Email: {{{email}}} </p>
+              <p>Registration Date: {{{format_date date_created}}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+</section>
+<section class="container mx-auto" id="patientVisitContainer">
+  <div class="row justify-content-center" style="margin: 30px;">
+    <div class="card">
+      <div class="card-title">
+        <h2 style="display: inline;">Your Previous Visits - {{{visits.length}}} in total.</h2>
+        <button type="button" class="btn btn-success" id="newVisitStartBtn" style="float: right;">Start a new virtual
+          visit</button>
+      </div>
+      <div class="card-body" id="previousVisitBody">
+        {{#if visits.length}}
+        <ol>
+          {{#each visits as |visit|}}
+          <li class="row mx-auto" id="previousVisitRow">
+            <p>Date: {{{format_date visit.date_visited}}} with Dr. {{{visit.doctor.last_name}}}.</p>
+            <p>You presented with these symptoms:
+            <ul>
+              {{#each visit.visits_stdmodel as |std|}}
+              <li>{{{std.symptom}}}</li>
+              {{/each}}
+            </ul>
+            </p>
+
+            <p>You were assigned the following tests:
+            <ul>
+              {{#each visit.visits_stdmodel as |std|}}
+              <li>{{{std.test}}}{{#if std.visit_symptoms.is_positive}} <span style='color: red;'>(positive)
+                </span>{{/if}}
+              </li>
+              {{/each}}
+            </ul>
+            <p> Based on your test results, Dr. {{{visit.doctor.last_name}}} gave you the diagnosis of
+              {{#each visit.visits_stdmodel as |std|}}
+              {{#if std.visit_symptoms.is_positive}} <span
+                style='font-weight: bolder; color: blue;'>"{{{std.diagnosis}}}"</span> {{/if}} {{/each}}.
+            </p>
+            <br />
+            {{#if visit.visit_treatment.length}}
+            <p>Dr. {{{visit.doctor.last_name}}}'s recommended treatment for this diagnosis was <span
+                style='font-weight: bolder; color: green;'>{{{visit.visit_treatment.0.name}}}</span>.</p>
+            <p>Doctor's remarks: {{visit.visit_treatment.0.description}}</p>
+            {{else}}
+            <p>No treatment assigned yet. Please wait for Dr. {{{visit.doctor.last_name}}} to analyze your results and
+              diagnosis, and make a recommendation.</p>
+            {{/if}}
+          </li>
+          {{/each}}
+        </ol>
+        {{else}}
+        <div class="row justify-content-center" style="margin-top: 30px">
+          <h4>You haven't had any visits yet!</h4>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="../js/patient_dashboard.js"></script>
