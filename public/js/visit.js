@@ -1,58 +1,174 @@
-async function submitVisitForm (event){
+let doctorButtons = document.querySelectorAll("#chooseDoctorButton");
+
+const patientID = document.querySelector('#pId').textContent;
+
+let lastVisitId;
+
+async function createNewVisit() {
+  chosenDoctorId = parseInt(this.dataset.doctorid);
+  document
+    .querySelector("#chooseDoctorContainer")
+    .setAttribute("style", "display: none");
+  document.querySelector("#visitContainer").removeAttribute("style");
+
+  const doctor_id = chosenDoctorId;
+
+  const response = await fetch(`/api/visits`, {
+    method: "POST",
+    body: JSON.stringify({ doctor_id }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+async function getSymptoms(event) {
   event.preventDefault();
 
-  const headache = document.querySelector("#checkboxHeadache").checked;
-  const blurry_vision = document.querySelector("#checkboxBlurryVision").checked;
-  const runny_nose = document.querySelector("#checkboxRunnyNose").checked;
-  const cough = document.querySelector("#checkboxCough").checked;
-  const fever = document.querySelector("#checkboxFever").checked;
-  const high_blood_pressure = document.querySelector("#checkboxHighBloodPressure").checked;
-  const high_blood_sugar = document.querySelector("#checkboxHighBloodSugar").checked;
-  const nausea = document.querySelector("#checkboxNausea").checked;
-  const vomiting = document.querySelector("#checkboxVomiting").checked;
-  const back_pain = document.querySelector("#checkboxBackPain").checked;
-  const joint_pain = document.querySelector("#checkboxJointPain").checked;
-  const weakness = document.querySelector("#checkboxWeakness").checked;
-  const difficulty_breathing = document.querySelector("#checkboxDifficultyBreathing").checked;
-  const urinary_issues = document.querySelector("#checkboxUrinaryIssues").checked;
-  const digestive_issues = document.querySelector("#checkboxDigestiveIssues").checked;
-  const other = document.querySelector("#checkboxOther").checked;
-  const description = document.querySelector("#descriptionBox").value;
+  let checkedSymptomsIdArray = [];
+  let symptomsArr = [];
+  let checkedSymptomArray = [];
+  let assignedTestArray = [];
+  let vsArray = [];
+  let stdArray = [];
+
+  const symptomContainer = document.querySelector('#symptomsForm');
+  const symptoms = symptomContainer.querySelectorAll('.form-check-input');
+  symptomsArr = Array.from(symptoms)
+  const newArr = symptomsArr.map((s) => {
+    if (s.checked){
+      s.intId = parseInt(s.dataset.id)
+      checkedSymptomsIdArray.push(s.intId)
+    }
+  });
+  console.log(checkedSymptomsIdArray);
+
+      console.log(patientID);
+      const response1 = await fetch(`/patients/${patientID}`, {
+        method: 'GET',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response1.ok){
+        console.log(response1);
+        let data = await response1.json();
+        let visitArr = data.visits
+        let lastId = visitArr.length -1;
+        lastVisitId = parseInt(visitArr[lastId].id);
+        console.log(lastVisitId);
+      } else  {
+        alert('oops')
+      }
 
 
-  console.log(headache);
-  console.log(description);
+  // --------------------------------------------------------------------------------------
+  // Positive Test Shuffle Logic part 1
+  // This part is the logic that randomly assigns one test as positive.
+  // It uses a third-party array shuffle function known as "Durstenfeld Shuffle" for ES6.
+  // link: https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
+
+  console.log(checkedSymptomsIdArray)
+  async function shuffleArray (checkedSymptomsIdArray) {
+    for (let i = checkedSymptomsIdArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [checkedSymptomsIdArray[i], checkedSymptomsIdArray[j]] = [checkedSymptomsIdArray[j], checkedSymptomsIdArray[i]];
+    }
+  };
+  shuffleArray(checkedSymptomsIdArray);
+  console.log(checkedSymptomsIdArray);
+  let x = 0;
+  let is_positive = false;
+  // ---------------------------------------------------------------------------------------
 
 
-  const response = await fetch(`/api/symptoms`, { //placeholder route//
-      method: 'POST',
-      body: JSON.stringify({
-      headache, blurry_vision, runny_nose, cough, fever, high_blood_pressure, high_blood_sugar, nausea, vomiting,
-      back_pain, joint_pain, weakness, difficulty_breathing, urinary_issues, digestive_issues, other, description
-      }),
-      headers: {
-      'Content-Type': 'application/json',
-      },
-    }),
-
-
-  if (response.ok){
-    launchVisitCompleteModal();
-    window.location.replace('/tests');
-
+  if (!checkedSymptomsIdArray.length){
+    launchVisitFailModal();
   } else {
-    launchVisitIncompleteModal();
-    window.location.replace('/patient_dashboard');
 
-  }
-};
+    const stdMaker = checkedSymptomsIdArray.map(async (stdModelId) => {
+    
+  // -------------------------------------------------------------------------
+      //  Positive Test Shuffle Logic part 2 
+      if (x === 0){
+        is_positive = true;
+        x++;
+      } else {
+        is_positive = false;
+      }
+  // -------------------------------------------------------------------------
 
-async function launchVisitCompleteModal(){
-  document.querySelector('#visitCompleteModal').modal('show');
-};
+      let response2 = await fetch(`/api/visit_symptoms`, {
+        method: "POST",
+        body: JSON.stringify({ 
+          stdModelId,
+          lastVisitId,
+          is_positive }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    })
 
-async function launchVisitFailModal(){
-  document.querySelector('#visitFailModal').modal('show');
-};
+      const response3 = await fetch(`/visits/${lastVisitId}`, {
+        method: 'GET',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-document.querySelector("#visitForm").addEventListener('submit', submitVisitForm)
+
+      if (response3.ok){
+        let data3 = await response3.json();
+        console.log(data3)
+        stdArray = data3.visits_stdmodel;
+        vsArray = data3.visit_symptoms;
+        console.log(vsArray);
+
+        checkedSymptomArray = stdArray.map((std) => {
+          return std.symptom;
+        })
+
+        assignedTestArray = stdArray.map((std) => {
+          return std.test;
+        })
+
+        let xyz = assignedTestArray.forEach(async (test) => {
+          let t = document.createElement('li');
+          t.innerHTML = test;
+          document.querySelector('#assignedTestsList').appendChild(t);
+        })
+      } else {
+        console.log('Response from Visit/id search not ok.')
+      }
+      launchVisitCompleteModal();
+    };
+  };
+
+async function launchVisitCompleteModal() {
+  $("#visitCompleteModal").modal("show");
+  $('#visitCompleteModal').on('hidden.bs.modal', function (e) {
+    location.href = '/tests';
+})
+}
+
+async function redirectToPatientDashboard(){
+  location.href = '/tests';
+}
+
+async function launchVisitFailModal() {
+  $("#visitFailModal").modal("show");
+}
+
+doctorButtons.forEach((b) => {
+  b.addEventListener("click", createNewVisit);
+});
+
+document
+  .querySelector("#symptomsForm")
+  .addEventListener("submit", getSymptoms);
+
+document
+  .querySelector("#visitCompleteModalCloseBtn").
+  addEventListener("click", redirectToPatientDashboard);
