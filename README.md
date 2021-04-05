@@ -87,13 +87,15 @@ Our web application works with the following steps:
 
 ### Technologies-Used
 
-Front end uses HTML, CSS, Bootstrap, Javascript.
-Back end development uses Node, NPM, ExpressJS, SQL, Sequelize and MVC format.
-Hosting is done through Heroku.com.
+MVC Model
+Front end uses HTML, CSS, Bootstrap, Javascript
+Back end development uses Node, NPM, ExpressJS, MySQL, Sequelize
+Hosting is done through Heroku.com
 
 ### Usage
 
 Visit our deployed website on Heroku at <a href="https://innovate-rx.herokuapp.com/">Heroku live link</a>.
+Our application is best viewed with 480px+ width.
 
 ### License
 
@@ -109,6 +111,10 @@ We aim to add the following features for the app in the future:
 - Request new treatment
 - Give feedback on the doctors and treatments
 - Use a private messageboard-style chat to communicate directly with your doctors
+
+### Known Issues
+
+- On screens with max width of 768px and below, Carousel image captions will disappear and images may show up with different heights. This is on purpose to maintain image scale and viewability due to responsiveness concerns.
 
 ### Contact
 
